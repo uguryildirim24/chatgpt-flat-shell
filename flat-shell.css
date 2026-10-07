@@ -1,0 +1,150 @@
+/*
+ * ChatGPT flat shell — removes the gray outer frame of the ChatGPT/Codex
+ * desktop app (2026 "page surface" layout) so the sidebar and main content
+ * run to the window edges.
+ *
+ * Selectors target the app's data-* hooks and custom properties, not its
+ * hashed class names (._PageSurface_xxxxx_2), so they survive most rebuilds.
+ * The launcher injects this file as a constructed stylesheet and live-reloads
+ * it on save. Ctrl+Option+Cmd+F toggles it inside the app.
+ */
+
+/* 1. Frame: no perimeter padding, no inset, no floating panel ------------- */
+
+[data-app-shell-frame] {
+  --app-shell-page-inline-end-inset: 0px !important;
+  --app-shell-page-surface-shadow: none !important;
+  --app-shell-window-radius: 0px !important;
+  --app-shell-navigation-rail-width: 0px !important;
+  padding: 0 !important;
+}
+
+/* The decorative rounded panel drawn behind the main content. */
+[data-app-shell-frame] [data-app-shell-workspace-row] > [class*="_PageSurface_"] {
+  display: none !important;
+}
+
+/* 2. Main content: full height, square corners, flush right/bottom -------- */
+
+[data-app-shell-frame] [data-app-shell-main-surface="default"] {
+  margin-top: 0 !important;
+  padding-top: var(--app-shell-titlebar-height) !important;
+}
+
+/* Any surface type (default, browser, ...): square and unclipped. */
+[data-app-shell-frame] [data-app-shell-main-surface] {
+  border-radius: 0 !important;
+  clip-path: none !important;
+  --app-shell-main-surface-top-start-radius: 0px !important;
+  --app-shell-main-surface-top-end-radius: 0px !important;
+  --app-shell-main-surface-clip-start-radius: 0px !important;
+  --app-shell-main-surface-clip-end-radius: 0px !important;
+  --app-shell-main-surface-clip-radius: 0px !important;
+}
+
+[data-app-shell-frame] [data-app-shell-main-titlebar] {
+  border-radius: 0 !important;
+}
+
+/* 3. Sidebar: full height, its own color behind the traffic lights -------- */
+
+/* The panel keeps its place below the titlebar row (the panel sits above the
+   titlebar in z-order, so moving it up would swallow clicks on back/forward
+   and the sidebar toggle). A click-through pseudo-element paints the sidebar
+   color into the band behind the traffic lights instead. */
+[data-app-shell-frame] .app-shell-left-panel {
+  background: color-mix(in oklab, var(--color-surface) 65%, transparent);
+}
+
+[data-app-shell-frame] .app-shell-left-panel::before {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  bottom: 100%;
+  height: var(--app-shell-titlebar-height);
+  background: inherit;
+  pointer-events: none;
+}
+
+/* The panel now carries the sidebar color, so the band behind the traffic
+   lights matches the sidebar below it. */
+[data-app-shell-frame] .app-shell-left-panel:not([data-slate-sidebar-peeking="true"]) .sidebar-navigation:not(.sidebar-navigation *) {
+  background: transparent !important;
+}
+
+[data-app-shell-frame] .app-shell-left-panel .sidebar-navigation {
+  clip-path: none !important;
+  border-radius: 0 !important;
+}
+
+/* Sidebar closed: the app would shrink the panel to the rail's width (now a
+   full-width strip). Collapse it completely; the titlebar's sidebar toggle,
+   back/forward and new-chat buttons stay available. */
+[data-app-shell-frame][data-app-shell-sidebar-open="false"] .app-shell-left-panel:not([data-slate-sidebar-peeking="true"]) {
+  width: 0 !important;
+  min-width: 0 !important;
+  overflow: hidden !important;
+}
+
+/* 4. Navigation rail -> horizontal toolbar at the bottom of the sidebar ---- */
+
+/* The row that holds [rail | sidebar] becomes [sidebar / rail]. */
+[data-app-shell-frame] .app-shell-left-panel :has(> [data-app-navigation-rail]) {
+  flex-direction: column-reverse !important;
+}
+
+/* The app measures the rail's clientWidth and offsets panels by it (e.g. the
+   "full view" tab layout). It ignores 0, so the rail box is 1px wide; its
+   buttons are positioned against the sidebar (nearest positioned ancestor). */
+[data-app-shell-frame] [data-app-navigation-rail] {
+  position: static !important;
+  align-self: flex-start !important;
+  width: 1px !important;
+  min-width: 1px !important;
+  height: 44px !important;
+  padding: 0 !important;
+}
+
+[data-app-shell-frame] .app-shell-left-panel .sidebar-navigation:not(.sidebar-navigation *) {
+  border-bottom: var(--border-width-hairline, 0.5px) solid var(--app-shell-sidebar-divider);
+}
+
+[data-app-shell-frame] [data-app-navigation-rail] > [class*="group/nav-list"] {
+  position: absolute !important;
+  bottom: 6px;
+  inset-inline: 10px 52px;
+  height: 32px;
+}
+
+[data-app-shell-frame] [data-app-navigation-rail] > div.relative:last-child {
+  position: absolute !important;
+  bottom: 6px;
+  inset-inline-end: 10px;
+}
+
+[data-app-shell-frame] [data-app-navigation-rail] [class*="group/nav-list"] {
+  flex-direction: row !important;
+  align-items: center !important;
+  gap: 2px !important;
+  margin: 0 !important;
+  min-width: 0;
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+  mask-image: none !important;
+}
+
+[data-app-navigation-rail] [data-size="xl"][data-uniform] {
+  --button-size: 32px;
+  width: 32px !important;
+  height: 32px !important;
+}
+
+/* Divider between the feature buttons and Code Review: horizontal -> vertical. */
+[data-app-navigation-rail] [class*="group/nav-list"] > div[class~="border-t"] {
+  width: 0 !important;
+  height: 18px !important;
+  margin: 0 4px !important;
+  border-top-width: 0 !important;
+  border-inline-start-width: 1px !important;
+  border-inline-start-style: solid !important;
+}
