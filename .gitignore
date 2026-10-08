@@ -1,2 +1,24 @@
-build/
-.dev/
+# Generated native helper and local launcher bundles
+/build/
+/dist/
+*.app/
+*.o
+*.dSYM/
+
+# Local diagnostics, logs and caches
+/.dev/
+.cache/
+*.log
+.DS_Store
+node_modules/
+
+# Local configuration and credentials
+.env
+.env.*
+!.env.example
+/secrets/
+/.ssh/
+*.pem
+*.key
+*.p12
+*.pfx
